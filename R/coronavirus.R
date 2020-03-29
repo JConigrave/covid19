@@ -31,17 +31,25 @@ dth_final = deaths %>%  tidyr::pivot_longer(names(deaths)[!names(deaths) %in% ba
 f = dplyr::left_join(con_final, dth_final , by = c("Province/State", "Country/Region", "Lat", "Long", "date")) #%>%
   #dplyr::left_join(rcvr, by = c("Province/State", "Country/Region", "Lat", "Long", "date"))
 
-f$active = f$cases - f$deaths # - f$recovered
+
 
 f$date = as.Date(f$date, format = "%m/%d/%y")
 
 f = data.table::data.table(f)
-names(f) = c("state","region","lat","long","date","cases","deaths","active")
+names(f) = c("state","region","lat","long","date","cases","deaths")
 
 f = f[order(date)]
 
 f[,new_cases := (cases - data.table::shift(cases)), by = c("region","state")]
 f[,new_deaths := (deaths - data.table::shift(deaths)), by = c("region","state")]
+f[,new_recovered := (data.table::shift(new_cases, n = 21) - data.table::shift(new_deaths, n = 21)), by = c("region","state")]
+f$new_recovered[is.na(f$new_recovered)] = 0
+
+f[,recovered := (cumsum(new_recovered)), by = c("region","state")]
+
+f$active = f$cases - f$deaths  - f$recovered
+
+
 #f[,new_recovered := (recovered - data.table::shift(recovered)), by = c("region","state")]
 #f[,resolved := (new_deaths + new_recovered)]
 f = data.frame(f)
@@ -49,6 +57,8 @@ f = data.frame(f)
 f$growth = (f$new_cases) / f$active * 100
 
 f$growth[is.infinite(f$growth)] = NA
+
+f$region[is.na(f$region)] = f$state[is.na(f$region)]
 
 return(f)
 
