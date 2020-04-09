@@ -11,7 +11,6 @@
 #' geom_line() + theme_bw()
 
 
-
 corona = function(){
 
 confirmed = data.table::fread("https://data.humdata.org/hxlproxy/api/data-preview.csv?url=https%3A%2F%2Fraw.githubusercontent.com%2FCSSEGISandData%2FCOVID-19%2Fmaster%2Fcsse_covid_19_data%2Fcsse_covid_19_time_series%2Ftime_series_covid19_confirmed_global.csv&filename=time_series_covid19_confirmed_global.csv", showProgress = F)
@@ -47,7 +46,7 @@ f$new_recovered[is.na(f$new_recovered)] = 0
 
 f[,recovered := (cumsum(new_recovered)), by = c("region","state")]
 
-f$active = f$cases - f$deaths  - f$recovered
+f$active = f$cases - f$deaths - f$recovered
 
 
 #f[,new_recovered := (recovered - data.table::shift(recovered)), by = c("region","state")]
